@@ -668,7 +668,9 @@ static int SetupVL53L1XDevices(VL53L1_DEV Device_DEV, int Device_ADDRESS,
 	status = VL53L1_DataInit(Device_DEV);
 	status = VL53L1_StaticInit(Device_DEV);
 	status = VL53L1_SetDistanceMode(Device_DEV, VL53L1_DISTANCEMODE_SHORT);
+
 	status = VL53L1_SetThresholdConfig(Device_DEV, &Detectionconfig );
+
 	status = VL53L1_SetMeasurementTimingBudgetMicroSeconds(Device_DEV, LASER_SENSOR_TIMING_BUDGET_US);
 	status = VL53L1_SetInterMeasurementPeriodMilliSeconds(Device_DEV, LASER_SENSOR_MEASUREMENT_PERIOD_MS);
 	status = VL53L1_StartMeasurement(Device_DEV);
@@ -683,36 +685,17 @@ void StartDefaultTask(void const * argument)
 {
 
   /* USER CODE BEGIN 5 */
+
+	  static char buffer[256];
 	/* Infinite loop */
 	for(;;)
 	{
-//		sprintf(buffer, "Idle task running\r\n");
-//
+
 //		HAL_UART_Transmit(&huart2, (uint8_t*) buffer, strlen(buffer), 500);
 		//		//	  This code changes the PWM value which sets the analogue voltage in one of the motor controllers.
 		//		HAL_TIM_PWM_Stop(&htim3,TIM_CHANNEL_1);
 		//		HAL_TIM_PWM_ConfigChannel(&htim3, &UserPWMConfigChannel1, TIM_CHANNEL_1);
 		//		HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_1);
-
-//		if(!HAL_GPIO_ReadPin(LASER_REAR_LEFT_INTERRUPT_GPIO_Port, LASER_REAR_LEFT_INTERRUPT_Pin)){
-//			BaseType_t checkIfYieldRequired;
-//			checkIfYieldRequired = xTaskResumeFromISR( tskLASREARLEFTHandle );
-//			portYIELD_FROM_ISR( checkIfYieldRequired );
-//		}
-//
-//		if(!HAL_GPIO_ReadPin(LASER_FRONT_LEFT_INTERRUPT_GPIO_Port, LASER_FRONT_LEFT_INTERRUPT_Pin)){
-//			BaseType_t checkIfYieldRequired;
-//			checkIfYieldRequired = xTaskResumeFromISR( tskLASFRONTLEFTHandle );
-//			portYIELD_FROM_ISR( checkIfYieldRequired );
-//		}
-//
-//		if(!HAL_GPIO_ReadPin(LASER_FRONT_RIGHT_INTERRUPT_GPIO_Port, LASER_FRONT_RIGHT_INTERRUPT_Pin)){
-//			BaseType_t checkIfYieldRequired;
-//			checkIfYieldRequired = xTaskResumeFromISR( tskLASFRONTRIGHHandle );
-//			portYIELD_FROM_ISR( checkIfYieldRequired );
-//		}
-
-		osDelay(100);
 
 	}
   /* USER CODE END 5 */ 
@@ -721,76 +704,73 @@ void StartDefaultTask(void const * argument)
 /* tskLASFRONTLEFT_fnc function */
 void tskLASFRONTLEFT_fnc(void const * argument)
 {
-  /* USER CODE BEGIN tskLASFRONTLEFT_fnc */
+	/* USER CODE BEGIN tskLASFRONTLEFT_fnc */
 
-  static char buffer[256];
+	static char buffer[256];
 
-  /* Infinite loop */
-  for(;;)
-  {
-//		vTaskSuspend(NULL);
-xSemaphoreTake(myMutex01Handle,100);
-			status = VL53L1_GetRangingMeasurementData(LASER_FRONT_LEFT_DEV,	&RangingDataFrontLeft);
-			status = VL53L1_ClearInterruptAndStartMeasurement(LASER_FRONT_LEFT_DEV);
+	/* Infinite loop */
+	for(;;)
+	{
+		xSemaphoreTake(myMutex01Handle,100);
+		status = VL53L1_GetRangingMeasurementData(LASER_FRONT_LEFT_DEV,	&RangingDataFrontLeft);
+		status = VL53L1_ClearInterruptAndStartMeasurement(LASER_FRONT_LEFT_DEV);
 
-		sprintf(buffer, "LASSenseFrontLeft:%d\r\n",RangingDataFrontLeft.RangeMilliMeter);
+		sprintf(buffer, "{LASSenseFrontLeft:%d}\r\n",RangingDataFrontLeft.RangeMilliMeter);
 
 		HAL_UART_Transmit(&huart2, (uint8_t*) buffer, strlen(buffer), 500);
 		xSemaphoreGive(myMutex01Handle);
 		osDelay(100);
-
-  }
-  /* USER CODE END tskLASFRONTLEFT_fnc */
+	}
+	/* USER CODE END tskLASFRONTLEFT_fnc */
 }
 
 /* tskLASREARLEFT_fnc function */
 void tskLASREARLEFT_fnc(void const * argument)
 {
-  /* USER CODE BEGIN tskLASREARLEFT_fnc */
+	/* USER CODE BEGIN tskLASREARLEFT_fnc */
 
-	  static char buffer[256];
+	static char buffer[256];
 
-  /* Infinite loop */
-  for(;;)
-  {
-//		vTaskSuspend(NULL);
-	  xSemaphoreTake(myMutex01Handle,100);
-			status = VL53L1_GetRangingMeasurementData(LASER_REAR_LEFT_DEV,	&RangingDataRearLeft);
-			status = VL53L1_ClearInterruptAndStartMeasurement(LASER_REAR_LEFT_DEV);
+	/* Infinite loop */
+	for(;;)
+	{
 
-		sprintf(buffer, "LASSenseRearLeft:%d\r\n",RangingDataRearLeft.RangeMilliMeter);
+		xSemaphoreTake(myMutex01Handle,100);
+		status = VL53L1_GetRangingMeasurementData(LASER_REAR_LEFT_DEV,	&RangingDataRearLeft);
+		status = VL53L1_ClearInterruptAndStartMeasurement(LASER_REAR_LEFT_DEV);
+
+		sprintf(buffer, "{LASSenseRearLeft:%d}\r\n",RangingDataRearLeft.RangeMilliMeter);
 
 		HAL_UART_Transmit(&huart2, (uint8_t*) buffer, strlen(buffer), 500);
 		xSemaphoreGive(myMutex01Handle);
 		osDelay(100);
 
-  }
-  /* USER CODE END tskLASREARLEFT_fnc */
+	}
+	/* USER CODE END tskLASREARLEFT_fnc */
 }
 
 /* tskLASFRONTRIGHT_fnc function */
 void tskLASFRONTRIGHT_fnc(void const * argument)
 {
-  /* USER CODE BEGIN tskLASFRONTRIGHT_fnc */
+	/* USER CODE BEGIN tskLASFRONTRIGHT_fnc */
 
-	  static char buffer[256];
+	static char buffer[256];
 
-  /* Infinite loop */
-  for(;;)
-  {
-//		vTaskSuspend(NULL);
-	  xSemaphoreTake(myMutex01Handle,100);
-			status = VL53L1_GetRangingMeasurementData(LASER_FRONT_RIGHT_DEV,	&RangingDataFrontRight);
-			status = VL53L1_ClearInterruptAndStartMeasurement(LASER_FRONT_RIGHT_DEV);
+	/* Infinite loop */
+	for(;;)
+	{
 
-		sprintf(buffer, "LASSenseFrontRight:%d\r\n",RangingDataFrontRight.RangeMilliMeter);
+		xSemaphoreTake(myMutex01Handle,100);
+		status = VL53L1_GetRangingMeasurementData(LASER_FRONT_RIGHT_DEV,	&RangingDataFrontRight);
+		status = VL53L1_ClearInterruptAndStartMeasurement(LASER_FRONT_RIGHT_DEV);
+
+		sprintf(buffer, "{LASSenseFrontRight:%d}\r\n",RangingDataFrontRight.RangeMilliMeter);
 
 		HAL_UART_Transmit(&huart2, (uint8_t*) buffer, strlen(buffer), 500);
 		xSemaphoreGive(myMutex01Handle);
 		osDelay(100);
-
-  }
-  /* USER CODE END tskLASFRONTRIGHT_fnc */
+	}
+	/* USER CODE END tskLASFRONTRIGHT_fnc */
 }
 
 /* tskEDGLFTFRNT function */
@@ -804,7 +784,7 @@ void tskEDGLFTFRNT(void const * argument)
   for(;;)
   {
 	  vTaskSuspend(NULL);
-		sprintf(buffer, "Edge left front flagged\r\n");
+		sprintf(buffer, "{EDGLFTFRNT:1}\r\n");
 		HAL_UART_Transmit(&huart2, (uint8_t*) buffer, strlen(buffer), 500);
 
 
@@ -823,7 +803,7 @@ void tskEDGLFTRER(void const * argument)
   for(;;)
   {
 	  vTaskSuspend(NULL);
-		sprintf(buffer, "Edge left rear flagged\r\n");
+		sprintf(buffer, "{EDGLFTRER:1}\r\n");
 		HAL_UART_Transmit(&huart2, (uint8_t*) buffer, strlen(buffer), 500);
 
   }
@@ -841,7 +821,7 @@ void tskEDGRGTFRNT(void const * argument)
   for(;;)
   {
 	  vTaskSuspend(NULL);
-		sprintf(buffer, "Edge right front flagged\r\n");
+		sprintf(buffer, "{EDGRGTFRNT:1}\r\n");
 		HAL_UART_Transmit(&huart2, (uint8_t*) buffer, strlen(buffer), 500);
 
   }
@@ -859,7 +839,7 @@ void tskEDGRGTRER(void const * argument)
   for(;;)
   {
 	  vTaskSuspend(NULL);
-		sprintf(buffer, "Edge right rear flagged\r\n");
+		sprintf(buffer, "{EDGRGTRER:1}\r\n");
 		HAL_UART_Transmit(&huart2, (uint8_t*) buffer, strlen(buffer), 500);
 
   }
