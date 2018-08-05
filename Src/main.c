@@ -138,7 +138,7 @@ static char state_initialised=0;
 static char state_at_centre=0;
 static char state_edge_crossed=0;
 static char state_opponent_lost=0;
-static char state_tracking_opponent=0;
+//static char state_tracking_opponent=0;
 
 
 /* USER CODE END PV */
