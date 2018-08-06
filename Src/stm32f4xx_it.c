@@ -42,6 +42,12 @@ extern osThreadId tskEDGLFTFRONTHandle;
 extern osThreadId tskEDGLFTREARHandle;
 extern osThreadId tskEDGRGTFRONTHandle;
 extern osThreadId tskEDGRGTREARHandle;
+
+extern osThreadId tskLASFRONTLEFTHandle;
+extern osThreadId tskLASREARLEFTHandle;
+extern osThreadId tskLASFRONTRIGHHandle;
+
+
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/

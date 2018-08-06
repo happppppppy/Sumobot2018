@@ -199,11 +199,11 @@ RightMotorPWMConfig.OCFastMode = RIGHT_MOTOR_OCFAST;
 RightMotorPWMConfig.OCPolarity = RIGHT_MOTOR_OCPOLARITY;
 RightMotorPWMConfig.Pulse = RIGHT_MOTOR_PULSE_START;
 
-Detectionconfig.DetectionMode = VL53L1_DETECTION_DISTANCE_ONLY;
-Detectionconfig.Distance.CrossMode = VL53L1_THRESHOLD_CROSSED_LOW;
+Detectionconfig.DetectionMode = VL53L1_DETECTION_NORMAL_RUN;
+Detectionconfig.Distance.CrossMode = VL53L1_THRESHOLD_IN_WINDOW;
 Detectionconfig.IntrNoTarget = 0;
 Detectionconfig.Distance.High = 1000;
-Detectionconfig.Distance.Low = 500;
+Detectionconfig.Distance.Low = 50;
 
 
 
@@ -595,10 +595,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(EDGE_LEFT_FRONT_INTERRUPT_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LASER_RIGHT_REAR_INTERRUPT_Pin LASER_REAR_LEFT_INTERRUPT_Pin LASER_FRONT_RIGHT_INTERRUPT_Pin */
-  GPIO_InitStruct.Pin = LASER_RIGHT_REAR_INTERRUPT_Pin|LASER_REAR_LEFT_INTERRUPT_Pin|LASER_FRONT_RIGHT_INTERRUPT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  /*Configure GPIO pins : LASER_RIGHT_REAR_INTERRUPT_Pin LASER_REAR_LEFT_INTERRUPT_Pin */
+  GPIO_InitStruct.Pin = LASER_RIGHT_REAR_INTERRUPT_Pin|LASER_REAR_LEFT_INTERRUPT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LASER_RIGHT_REAR_SHDN_Pin LASER_RIGHT_FRONT_SHDN_Pin LASER_LEFT_REAR_SHDN_Pin LASER_LEFT_FRONT_SHDN_Pin */
@@ -610,8 +610,8 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : LASER_RIGHT_FRONT_INTERRUPT_Pin LASER_LEFT_REAR_INTERRUPT_Pin LASER_LEFT_FRONT_INTERRUPT_Pin LASER_REAR_RIGHT_INTERRUPT_Pin */
   GPIO_InitStruct.Pin = LASER_RIGHT_FRONT_INTERRUPT_Pin|LASER_LEFT_REAR_INTERRUPT_Pin|LASER_LEFT_FRONT_INTERRUPT_Pin|LASER_REAR_RIGHT_INTERRUPT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LASER_REAR_RIGHT_SHDN_Pin LASER_REAR_LEFT_SHDN_Pin */
@@ -620,6 +620,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : LASER_FRONT_RIGHT_INTERRUPT_Pin */
+  GPIO_InitStruct.Pin = LASER_FRONT_RIGHT_INTERRUPT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(LASER_FRONT_RIGHT_INTERRUPT_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LASER_FRONT_RIGHT_SHDN_Pin LASER_FRONT_LEFT_SHDN_Pin */
   GPIO_InitStruct.Pin = LASER_FRONT_RIGHT_SHDN_Pin|LASER_FRONT_LEFT_SHDN_Pin;
@@ -630,8 +636,8 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : LASER_FRONT_LEFT_INTERRUPT_Pin */
   GPIO_InitStruct.Pin = LASER_FRONT_LEFT_INTERRUPT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(LASER_FRONT_LEFT_INTERRUPT_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
@@ -704,7 +710,7 @@ void StartDefaultTask(void const * argument)
 /* tskLASFRONTLEFT_fnc function */
 void tskLASFRONTLEFT_fnc(void const * argument)
 {
-	/* USER CODE BEGIN tskLASFRONTLEFT_fnc */
+  /* USER CODE BEGIN tskLASFRONTLEFT_fnc */
 
 	static char buffer[256];
 
@@ -715,62 +721,59 @@ void tskLASFRONTLEFT_fnc(void const * argument)
 		status = VL53L1_GetRangingMeasurementData(LASER_FRONT_LEFT_DEV,	&RangingDataFrontLeft);
 		status = VL53L1_ClearInterruptAndStartMeasurement(LASER_FRONT_LEFT_DEV);
 
-		sprintf(buffer, "{LASSenseFrontLeft:%d}\r\n",RangingDataFrontLeft.RangeMilliMeter);
+		sprintf(buffer, "{LASSenseFrontLeft:%d}",RangingDataFrontLeft.RangeMilliMeter);
 
 		HAL_UART_Transmit(&huart2, (uint8_t*) buffer, strlen(buffer), 500);
 		xSemaphoreGive(myMutex01Handle);
 		osDelay(100);
 	}
-	/* USER CODE END tskLASFRONTLEFT_fnc */
+  /* USER CODE END tskLASFRONTLEFT_fnc */
 }
 
 /* tskLASREARLEFT_fnc function */
 void tskLASREARLEFT_fnc(void const * argument)
 {
-	/* USER CODE BEGIN tskLASREARLEFT_fnc */
+  /* USER CODE BEGIN tskLASREARLEFT_fnc */
 
 	static char buffer[256];
 
 	/* Infinite loop */
 	for(;;)
 	{
-
 		xSemaphoreTake(myMutex01Handle,100);
 		status = VL53L1_GetRangingMeasurementData(LASER_REAR_LEFT_DEV,	&RangingDataRearLeft);
 		status = VL53L1_ClearInterruptAndStartMeasurement(LASER_REAR_LEFT_DEV);
 
-		sprintf(buffer, "{LASSenseRearLeft:%d}\r\n",RangingDataRearLeft.RangeMilliMeter);
+		sprintf(buffer, "{LASSenseRearLeft:%d}",RangingDataRearLeft.RangeMilliMeter);
 
 		HAL_UART_Transmit(&huart2, (uint8_t*) buffer, strlen(buffer), 500);
 		xSemaphoreGive(myMutex01Handle);
 		osDelay(100);
-
 	}
-	/* USER CODE END tskLASREARLEFT_fnc */
+  /* USER CODE END tskLASREARLEFT_fnc */
 }
 
 /* tskLASFRONTRIGHT_fnc function */
 void tskLASFRONTRIGHT_fnc(void const * argument)
 {
-	/* USER CODE BEGIN tskLASFRONTRIGHT_fnc */
+  /* USER CODE BEGIN tskLASFRONTRIGHT_fnc */
 
 	static char buffer[256];
 
 	/* Infinite loop */
 	for(;;)
 	{
-
 		xSemaphoreTake(myMutex01Handle,100);
 		status = VL53L1_GetRangingMeasurementData(LASER_FRONT_RIGHT_DEV,	&RangingDataFrontRight);
 		status = VL53L1_ClearInterruptAndStartMeasurement(LASER_FRONT_RIGHT_DEV);
 
-		sprintf(buffer, "{LASSenseFrontRight:%d}\r\n",RangingDataFrontRight.RangeMilliMeter);
+		sprintf(buffer, "{LASSenseFrontRight:%d}",RangingDataFrontRight.RangeMilliMeter);
 
 		HAL_UART_Transmit(&huart2, (uint8_t*) buffer, strlen(buffer), 500);
 		xSemaphoreGive(myMutex01Handle);
 		osDelay(100);
 	}
-	/* USER CODE END tskLASFRONTRIGHT_fnc */
+  /* USER CODE END tskLASFRONTRIGHT_fnc */
 }
 
 /* tskEDGLFTFRNT function */
@@ -784,7 +787,7 @@ void tskEDGLFTFRNT(void const * argument)
   for(;;)
   {
 	  vTaskSuspend(NULL);
-		sprintf(buffer, "{EDGLFTFRNT:1}\r\n");
+		sprintf(buffer, "{EDGLFTFRNT:1}");
 		HAL_UART_Transmit(&huart2, (uint8_t*) buffer, strlen(buffer), 500);
 
 
@@ -803,7 +806,7 @@ void tskEDGLFTRER(void const * argument)
   for(;;)
   {
 	  vTaskSuspend(NULL);
-		sprintf(buffer, "{EDGLFTRER:1}\r\n");
+		sprintf(buffer, "{EDGLFTRER:1}");
 		HAL_UART_Transmit(&huart2, (uint8_t*) buffer, strlen(buffer), 500);
 
   }
@@ -821,7 +824,7 @@ void tskEDGRGTFRNT(void const * argument)
   for(;;)
   {
 	  vTaskSuspend(NULL);
-		sprintf(buffer, "{EDGRGTFRNT:1}\r\n");
+		sprintf(buffer, "{EDGRGTFRNT:1}");
 		HAL_UART_Transmit(&huart2, (uint8_t*) buffer, strlen(buffer), 500);
 
   }
@@ -839,7 +842,7 @@ void tskEDGRGTRER(void const * argument)
   for(;;)
   {
 	  vTaskSuspend(NULL);
-		sprintf(buffer, "{EDGRGTRER:1}\r\n");
+		sprintf(buffer, "{EDGRGTRER:1}");
 		HAL_UART_Transmit(&huart2, (uint8_t*) buffer, strlen(buffer), 500);
 
   }
