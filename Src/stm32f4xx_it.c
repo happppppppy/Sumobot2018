@@ -37,16 +37,7 @@
 #include "cmsis_os.h"
 
 /* USER CODE BEGIN 0 */
-
-extern osThreadId tskEDGLFTFRONTHandle;
-extern osThreadId tskEDGLFTREARHandle;
-extern osThreadId tskEDGRGTFRONTHandle;
-extern osThreadId tskEDGRGTREARHandle;
-
-extern osThreadId tskLASFRONTLEFTHandle;
-extern osThreadId tskLASREARLEFTHandle;
-extern osThreadId tskLASFRONTRIGHHandle;
-
+extern osThreadId tskEDGEHandle;
 
 /* USER CODE END 0 */
 
@@ -86,7 +77,7 @@ void EXTI0_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI0_IRQn 0 */
   BaseType_t checkIfYieldRequired;
-  checkIfYieldRequired = xTaskResumeFromISR( tskEDGRGTREARHandle );
+  checkIfYieldRequired = xTaskResumeFromISR( tskEDGEHandle );
   portYIELD_FROM_ISR( checkIfYieldRequired );
   /* USER CODE END EXTI0_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
@@ -102,7 +93,7 @@ void EXTI2_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI2_IRQn 0 */
   BaseType_t checkIfYieldRequired;
-  checkIfYieldRequired = xTaskResumeFromISR( tskEDGLFTREARHandle );
+  checkIfYieldRequired = xTaskResumeFromISR( tskEDGEHandle );
   portYIELD_FROM_ISR( checkIfYieldRequired );
   /* USER CODE END EXTI2_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
@@ -118,7 +109,7 @@ void EXTI3_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI3_IRQn 0 */
   BaseType_t checkIfYieldRequired;
-  checkIfYieldRequired = xTaskResumeFromISR( tskEDGLFTFRONTHandle );
+  checkIfYieldRequired = xTaskResumeFromISR( tskEDGEHandle );
   portYIELD_FROM_ISR( checkIfYieldRequired );
   /* USER CODE END EXTI3_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
@@ -134,7 +125,7 @@ void EXTI4_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI4_IRQn 0 */
   BaseType_t checkIfYieldRequired;
-  checkIfYieldRequired = xTaskResumeFromISR( tskEDGLFTFRONTHandle );
+  checkIfYieldRequired = xTaskResumeFromISR( tskEDGEHandle );
   portYIELD_FROM_ISR( checkIfYieldRequired );
   /* USER CODE END EXTI4_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);

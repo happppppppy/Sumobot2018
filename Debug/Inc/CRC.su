@@ -1,0 +1,6 @@
+CRC.c:85:7:fillCRC8Table	40	static
+CRC.c:144:7:CRC8	32	static
+CRC.c:160:7:tableGetPolynomial	16	static
+CRC.c:168:6:tableIsReflected	16	static
+CRC.c:177:14:flipByte	16	static
+CRC.c:197:15:flipBitsInBytes	16	static

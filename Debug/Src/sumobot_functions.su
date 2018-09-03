@@ -1,2 +1,6 @@
-sumobot_functions.c:6:6:PIDController	32	static
-sumobot_functions.c:33:6:EncoderController	16	static
+sumobot_functions.c:3:6:PIDController	32	static
+sumobot_functions.c:30:6:EncoderController	16	static
+sumobot_functions.c:38:6:tmc5160_writeInt	24	static
+sumobot_functions.c:43:6:tmc40bit_writeInt	32	static
+sumobot_functions.c:58:6:tmc5160_initialise_motor	8	static
+sumobot_functions.c:98:14:SetupVL53L1XDevices	32	static

@@ -1,0 +1,5 @@
+TMC5160.c:71:6:tmc5160_initConfig	24	static
+TMC5160.c:84:6:tmc5160_writeConfiguration	32	static
+TMC5160.c:103:6:tmc5160_periodicJob	32	static
+TMC5160.c:125:7:tmc5160_reset	16	static
+TMC5160.c:136:7:tmc5160_restore	16	static
