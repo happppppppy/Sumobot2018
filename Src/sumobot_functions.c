@@ -37,7 +37,10 @@ void EncoderController(sEncoder *sEncoder, TIM_HandleTypeDef *htim2){
 
 void tmc5160_writeInt(GPIO_TypeDef* CSN_GPIO_Port, uint16_t CSN_GPIO_Pin, uint8_t address, int value)
 {
-    tmc40bit_writeInt(CSN_GPIO_Port, CSN_GPIO_Pin, address, value);
+    if(MOTORS_ENABLED == 1){
+    	tmc40bit_writeInt(CSN_GPIO_Port, CSN_GPIO_Pin, address, value);
+    }
+
 }
 
 void tmc40bit_writeInt(GPIO_TypeDef* CSN_GPIO_Port,uint16_t CSN_GPIO_Pin, uint8_t address, int value)
@@ -70,13 +73,17 @@ void tmc5160_initialise_motor(sTMC5160Motor Motor){
 	tmc5160_writeInt(Motor.gpio_port, Motor.gpio_pin, TMC5160_CHOPCONF, 0x000100C3);
 
 	// IHOLD=10, IRUN=15 (max. current), IHOLDDELAY=6
-	tmc5160_writeInt(Motor.gpio_port, Motor.gpio_pin, TMC5160_IHOLD_IRUN, 0x00080F05);
+	tmc5160_writeInt(Motor.gpio_port, Motor.gpio_pin, TMC5160_IHOLD_IRUN, 0x00080D05);
 
 	// TPOWERDOWN=10: Delay before power down in stand still
 	tmc5160_writeInt(Motor.gpio_port, Motor.gpio_pin, TMC5160_TPOWERDOWN, 0x0000000A);
 
 	// TPWMTHRS=500
-	tmc5160_writeInt(Motor.gpio_port, Motor.gpio_pin, TMC5160_TPWMTHRS, 0x000001F4);
+	tmc5160_writeInt(Motor.gpio_port, Motor.gpio_pin, TMC5160_TPWMTHRS, 0x0000001);
+
+	//
+	tmc5160_writeInt(Motor.gpio_port, Motor.gpio_pin, TMC5160_VDCMIN, 0x00000000);
+
 
 	// TPWMCONF - PWM_LIM=12, PWM_REG=4, freewheel1=0, freewheel0=0, pwm_autograd=1, pwm_autoscale=1,
 	// PWM_GRAD=240, PWM_OFS=30
@@ -95,10 +102,34 @@ void tmc5160_initialise_motor(sTMC5160Motor Motor){
 
 }
 
+
+float degreesToRadians(float angleDegrees){
+	float angleRadians;
+
+	angleRadians = angleDegrees * (M_PI / 180.0);
+
+	return angleRadians;
+}
+
+float radiansToDegrees(float angleRadians){
+	float angleDegrees;
+
+	angleDegrees = angleRadians / (M_PI / 180.0);
+
+	return angleDegrees;
+}
+
 VL53L1_Error SetupVL53L1XDevices(VL53L1_DEV Device_DEV, int Device_ADDRESS,
 		GPIO_TypeDef* Device_SHDNPORT, uint16_t Device_SHDNPIN) {
 	VL53L1_Error status;
 	HAL_GPIO_WritePin(Device_SHDNPORT, Device_SHDNPIN, GPIO_PIN_SET);
+
+	VL53L1_UserRoi_t roiConfig;
+	roiConfig.TopLeftX = 10;
+	roiConfig.TopLeftY = 15;
+	roiConfig.BotRightX = 15;
+	roiConfig.BotRightY = 0;
+
 
 	Device_DEV->I2cHandle = &hi2c1;
 	Device_DEV->I2cDevAddr = 0x52;
@@ -112,11 +143,43 @@ VL53L1_Error SetupVL53L1XDevices(VL53L1_DEV Device_DEV, int Device_ADDRESS,
 	status = VL53L1_StaticInit(Device_DEV);
 	status = VL53L1_SetDistanceMode(Device_DEV, VL53L1_DISTANCEMODE_SHORT);
 
-	status = VL53L1_SetThresholdConfig(Device_DEV, &Detectionconfig );
+
+	status = VL53L1_SetUserROI(Device_DEV, &roiConfig);
+//	status = VL53L1_SetThresholdConfig(Device_DEV, &Detectionconfig );
 
 	status = VL53L1_SetMeasurementTimingBudgetMicroSeconds(Device_DEV, LASER_SENSOR_TIMING_BUDGET_US);
 	status = VL53L1_SetInterMeasurementPeriodMilliSeconds(Device_DEV, LASER_SENSOR_MEASUREMENT_PERIOD_MS);
-	status = VL53L1_StartMeasurement(Device_DEV);
+	status = VL53L1_ClearInterruptAndStartMeasurement(Device_DEV);
 
 	return status;
+}
+
+void updateEdgeState(){
+	if(HAL_GPIO_ReadPin(EDGE_LEFT_FRONT_INTERRUPT_GPIO_Port, EDGE_LEFT_FRONT_INTERRUPT_Pin)==1){
+		state_edges |= 0x1;
+	}
+	else if(HAL_GPIO_ReadPin(EDGE_LEFT_FRONT_INTERRUPT_GPIO_Port, EDGE_LEFT_FRONT_INTERRUPT_Pin)==0){
+		state_edges &= ~0x1;
+	}
+
+	if(HAL_GPIO_ReadPin(EDGE_LEFT_REAR_INTERRUPT_GPIO_Port, EDGE_LEFT_REAR_INTERRUPT_Pin)==1){
+		state_edges |= 0x2;
+	}
+	else if(HAL_GPIO_ReadPin(EDGE_LEFT_REAR_INTERRUPT_GPIO_Port, EDGE_LEFT_REAR_INTERRUPT_Pin)==0){
+		state_edges &= ~0x2;
+	}
+
+	if(HAL_GPIO_ReadPin(EDGE_RIGHT_FRONT_INTERRUPT_GPIO_Port, EDGE_RIGHT_FRONT_INTERRUPT_Pin)==1){
+		state_edges |= 0x4;
+	}
+	else if(HAL_GPIO_ReadPin(EDGE_RIGHT_FRONT_INTERRUPT_GPIO_Port, EDGE_RIGHT_FRONT_INTERRUPT_Pin)==0){
+		state_edges &= ~0x4;
+	}
+
+	if(HAL_GPIO_ReadPin(EDGE_RIGHT_REAR_INTERRUPT_GPIO_Port, EDGE_RIGHT_REAR_INTERRUPT_Pin)==1){
+		state_edges |= 0x8;
+	}
+	else if(HAL_GPIO_ReadPin(EDGE_RIGHT_REAR_INTERRUPT_GPIO_Port, EDGE_RIGHT_REAR_INTERRUPT_Pin)==0){
+		state_edges &= ~0x8;
+	}
 }

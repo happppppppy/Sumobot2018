@@ -34,11 +34,9 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx.h"
 #include "stm32f4xx_it.h"
-#include "cmsis_os.h"
 
 /* USER CODE BEGIN 0 */
-extern osThreadId tskEDGEHandle;
-
+#include "sumobot_functions.h"
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -57,7 +55,7 @@ void SysTick_Handler(void)
   /* USER CODE BEGIN SysTick_IRQn 0 */
 
   /* USER CODE END SysTick_IRQn 0 */
-  osSystickHandler();
+  HAL_SYSTICK_IRQHandler();
   /* USER CODE BEGIN SysTick_IRQn 1 */
 
   /* USER CODE END SysTick_IRQn 1 */
@@ -76,9 +74,7 @@ void SysTick_Handler(void)
 void EXTI0_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI0_IRQn 0 */
-  BaseType_t checkIfYieldRequired;
-  checkIfYieldRequired = xTaskResumeFromISR( tskEDGEHandle );
-  portYIELD_FROM_ISR( checkIfYieldRequired );
+	updateEdgeState();
   /* USER CODE END EXTI0_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
   /* USER CODE BEGIN EXTI0_IRQn 1 */
@@ -92,9 +88,7 @@ void EXTI0_IRQHandler(void)
 void EXTI2_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI2_IRQn 0 */
-  BaseType_t checkIfYieldRequired;
-  checkIfYieldRequired = xTaskResumeFromISR( tskEDGEHandle );
-  portYIELD_FROM_ISR( checkIfYieldRequired );
+	updateEdgeState();
   /* USER CODE END EXTI2_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
   /* USER CODE BEGIN EXTI2_IRQn 1 */
@@ -108,9 +102,7 @@ void EXTI2_IRQHandler(void)
 void EXTI3_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI3_IRQn 0 */
-  BaseType_t checkIfYieldRequired;
-  checkIfYieldRequired = xTaskResumeFromISR( tskEDGEHandle );
-  portYIELD_FROM_ISR( checkIfYieldRequired );
+	updateEdgeState();
   /* USER CODE END EXTI3_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
   /* USER CODE BEGIN EXTI3_IRQn 1 */
@@ -124,9 +116,7 @@ void EXTI3_IRQHandler(void)
 void EXTI4_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI4_IRQn 0 */
-  BaseType_t checkIfYieldRequired;
-  checkIfYieldRequired = xTaskResumeFromISR( tskEDGEHandle );
-  portYIELD_FROM_ISR( checkIfYieldRequired );
+	updateEdgeState();
   /* USER CODE END EXTI4_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
   /* USER CODE BEGIN EXTI4_IRQn 1 */

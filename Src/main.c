@@ -4,58 +4,48 @@
  * @file           : main.c
  * @brief          : Main program body
  ******************************************************************************
- * This notice applies to any and all portions of this file
+ ** This notice applies to any and all portions of this file
  * that are not between comment pairs USER CODE BEGIN and
  * USER CODE END. Other portions of this file, whether
  * inserted by the user or by software development tools
  * are owned by their respective copyright owners.
  *
- * Copyright (c) 2018 STMicroelectronics International N.V.
- * All rights reserved.
+ * COPYRIGHT(c) 2018 STMicroelectronics
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted, provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *   1. Redistributions of source code must retain the above copyright notice,
+ *      this list of conditions and the following disclaimer.
+ *   2. Redistributions in binary form must reproduce the above copyright notice,
+ *      this list of conditions and the following disclaimer in the documentation
+ *      and/or other materials provided with the distribution.
+ *   3. Neither the name of STMicroelectronics nor the names of its contributors
+ *      may be used to endorse or promote products derived from this software
+ *      without specific prior written permission.
  *
- * 1. Redistribution of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- * 3. Neither the name of STMicroelectronics nor the names of other
- *    contributors to this software may be used to endorse or promote products
- *    derived from this software without specific written permission.
- * 4. This software, including modifications and/or derivative works of this
- *    software, must execute solely and exclusively on microcontroller or
- *    microprocessor devices manufactured by or for STMicroelectronics.
- * 5. Redistribution and use of this software other than as permitted under
- *    this license is void and will automatically terminate your rights under
- *    this license.
- *
- * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
- * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT
- * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
- * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  ******************************************************************************
  */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_hal.h"
-#include "cmsis_os.h"
 
 /* USER CODE BEGIN Includes */
 #include "vl53l1_api.h"
 #include "string.h"
 #include "sumobot_functions.h"
 #include "TMC5160.h"
+#include <math.h>
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -65,24 +55,8 @@ SPI_HandleTypeDef hspi1;
 
 UART_HandleTypeDef huart2;
 
-osThreadId defaultTaskHandle;
-osThreadId tskLASFRONTLEFTHandle;
-osThreadId tskLASREARLEFTHandle;
-osThreadId tskLASFRONTRIGHHandle;
-osThreadId tskLASREARRIGHTHandle;
-osThreadId tskLASLEFTFRONTHandle;
-osThreadId tskLASLEFTREARHandle;
-osThreadId tskLASRIGHTFRONHandle;
-osThreadId tskLASRIGHTREARHandle;
-osThreadId tskEDGEHandle;
-osMutexId I2CMutexHandle;
-osMutexId SPIMutexHandle;
-
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-VL53L1_Dev_t dev;
-VL53L1_DEV Dev = &dev;
-
 VL53L1_Dev_t LASER_FRONT_LEFT_dev_t;
 VL53L1_DEV LASER_FRONT_LEFT_DEV = &LASER_FRONT_LEFT_dev_t;
 VL53L1_RangingMeasurementData_t RangingDataFrontLeft;
@@ -99,30 +73,20 @@ VL53L1_Dev_t LASER_REAR_RIGHT_dev_t;
 VL53L1_DEV LASER_REAR_RIGHT_DEV = &LASER_REAR_RIGHT_dev_t;
 VL53L1_RangingMeasurementData_t RangingDataRearRight;
 
-VL53L1_Dev_t LASER_LEFT_FRONT_dev_t;
-VL53L1_DEV LASER_LEFT_FRONT_DEV = &LASER_LEFT_FRONT_dev_t;
-VL53L1_RangingMeasurementData_t RangingDataLeftFront;
-
-VL53L1_Dev_t LASER_LEFT_REAR_dev_t;
-VL53L1_DEV LASER_LEFT_REAR_DEV = &LASER_LEFT_REAR_dev_t;
-VL53L1_RangingMeasurementData_t RangingDataLeftRear;
-
-VL53L1_Dev_t LASER_RIGHT_FRONT_dev_t;
-VL53L1_DEV LASER_RIGHT_FRONT_DEV = &LASER_RIGHT_FRONT_dev_t;
-VL53L1_RangingMeasurementData_t RangingDataRightFront;
-
-VL53L1_Dev_t LASER_RIGHT_REAR_dev_t;
-VL53L1_DEV LASER_RIGHT_REAR_DEV = &LASER_RIGHT_REAR_dev_t;
-VL53L1_RangingMeasurementData_t RangingDataRightRear;
-
 VL53L1_DetectionConfig_t Detectionconfig;
 
 //State machine states
-static char state_seeking=0;
-static char state_tracking=0;
-static char state_start_fight=1;
+static unsigned char robot_state=STATE_IDLE;
+static unsigned char previous_state=STATE_IDLE;
 
-static unsigned char state_edges= 0x0; //Bit 0:Edge left front Bit 1:Edge left rear Bit 2:Edge right front Bit 3: Edge right rear
+unsigned char state_edges= 0x0; //Bit 0:Edge left front Bit 1:Edge left rear Bit 2:Edge right front Bit 3: Edge right rear
+
+static int64_t ScaledMotorMagnitude = 0;
+float Opponent_Theta =0;
+static char buffer[256];
+
+//I2C bus variables
+uint8_t measurementDataReady = 0x0;
 
 //SPI bus variables
 uint8_t spiTXbuffer[5], spiRXbuffer[5];
@@ -132,6 +96,13 @@ uint8_t SPISTATUS;
 sTMC5160Motor left_stepper;
 sTMC5160Motor right_stepper;
 
+sPIDController FrontPID_t;
+sPIDController_h hFrontPID = &FrontPID_t;
+
+sPIDController RearPID_t;
+sPIDController_h hRearPID = &RearPID_t;
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -140,16 +111,6 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_SPI1_Init(void);
-void StartDefaultTask(void const * argument);
-void tskLASFRONTLEFT_fnc(void const * argument);
-void tskLASREARLEFT_fnc(void const * argument);
-void tskLASFRONTRIGHT_fnc(void const * argument);
-void tskLASREARRIGHT_fnc(void const * argument);
-void tskLASLEFTFRONT_fnc(void const * argument);
-void tskLASLEFTREAR_fnc(void const * argument);
-void tskLASRIGHTFRONT_fnc(void const * argument);
-void tskLASRIGHTREAR_fnc(void const * argument);
-void tskEDGE_fnc(void const * argument);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -168,7 +129,7 @@ void tskEDGE_fnc(void const * argument);
 int main(void)
 {
 	/* USER CODE BEGIN 1 */
-
+	//Setup various configs
 	Detectionconfig.DetectionMode = VL53L1_DETECTION_NORMAL_RUN;
 	Detectionconfig.Distance.CrossMode = VL53L1_THRESHOLD_IN_WINDOW;
 	Detectionconfig.IntrNoTarget = 0;
@@ -201,8 +162,27 @@ int main(void)
 	right_stepper.gpio_pin = Stepper_Right_CSN_Pin;
 	right_stepper.direction = RM_DIRECTION;
 
+	hFrontPID->setPoint=0;
+	hFrontPID->Kp=30;
+	hFrontPID->Kd=0.3;
+	hFrontPID->Ki=0.8;
+	hFrontPID->PIDMax=100000;
+	hFrontPID->PIDMin=-100000;
+	hFrontPID->derivator=0;
+	hFrontPID->integrator=0;
+	hFrontPID->integratorMax=1000;
+	hFrontPID->integratorMin=-1000;
 
-
+	hRearPID->setPoint=0;
+	hRearPID->Kp=10;
+	hRearPID->Kd=1;
+	hRearPID->Ki=1.2;
+	hRearPID->PIDMax=100000;
+	hRearPID->PIDMin=-100000;
+	hRearPID->derivator=0;
+	hRearPID->integrator=0;
+	hRearPID->integratorMax=10000;
+	hRearPID->integratorMin=-10000;
 	/* USER CODE END 1 */
 
 	/* MCU Configuration----------------------------------------------------------*/
@@ -233,104 +213,201 @@ int main(void)
 	SetupVL53L1XDevices(LASER_FRONT_LEFT_DEV, LASFRONTLEFT_I2C_ADDRESS,LASER_FRONT_LEFT_SHDN_GPIO_Port, LASER_FRONT_LEFT_SHDN_Pin);
 	SetupVL53L1XDevices(LASER_FRONT_RIGHT_DEV,LASFRONTRIGHT_I2C_ADDRESS, LASER_FRONT_RIGHT_SHDN_GPIO_Port,LASER_FRONT_RIGHT_SHDN_Pin);
 	SetupVL53L1XDevices(LASER_REAR_LEFT_DEV, LASREARLEFT_I2C_ADDRESS,LASER_REAR_LEFT_SHDN_GPIO_Port, LASER_REAR_LEFT_SHDN_Pin);
-	//	SetupVL53L1XDevices(LASER_REAR_RIGHT_DEV, LASREARRIGHT_I2C_ADDRESS, LASER_REAR_RIGHT_SHDN_GPIO_Port, LASER_REAR_RIGHT_SHDN_Pin);
-	//	SetupVL53L1XDevices(LASER_LEFT_FRONT_DEV, LASLEFTFRONT_I2C_ADDRESS, LASER_LEFT_FRONT_SHDN_GPIO_Port, LASER_LEFT_FRONT_SHDN_Pin);
-	//	SetupVL53L1XDevices(LASER_LEFT_REAR_DEV, LASLEFTREAR_I2C_ADDRESS, LASER_LEFT_REAR_SHDN_GPIO_Port, LASER_LEFT_REAR_SHDN_Pin);
-	//	SetupVL53L1XDevices(LASER_RIGHT_FRONT_DEV, LASRIGHTFRONT_I2C_ADDRESS, LASER_RIGHT_FRONT_SHDN_GPIO_Port, LASER_RIGHT_FRONT_SHDN_Pin);
-	//	SetupVL53L1XDevices(LASER_RIGHT_REAR_DEV, LASRIGHTREAR_I2C_ADDRESS, LASER_RIGHT_REAR_SHDN_GPIO_Port, LASER_RIGHT_REAR_SHDN_Pin);
+	SetupVL53L1XDevices(LASER_REAR_RIGHT_DEV, LASREARRIGHT_I2C_ADDRESS, LASER_REAR_RIGHT_SHDN_GPIO_Port, LASER_REAR_RIGHT_SHDN_Pin);
 
 	//Initialise the motors
-	if(LEFT_MOTOR_ENABLED){
-		tmc5160_initialise_motor(left_stepper);
-	}
-	if(RIGHT_MOTOR_ENABLED){
-		tmc5160_initialise_motor(right_stepper);
-	}
+	tmc5160_initialise_motor(left_stepper);
+	tmc5160_initialise_motor(right_stepper);
+
 
 	state_edges= 0x0;
 
 	/* USER CODE END 2 */
 
-	/* Create the mutex(es) */
-	/* definition and creation of I2CMutex */
-	osMutexDef(I2CMutex);
-	I2CMutexHandle = osMutexCreate(osMutex(I2CMutex));
-
-	/* definition and creation of SPIMutex */
-	osMutexDef(SPIMutex);
-	SPIMutexHandle = osMutexCreate(osMutex(SPIMutex));
-
-	/* USER CODE BEGIN RTOS_MUTEX */
-	/* add mutexes, ... */
-	/* USER CODE END RTOS_MUTEX */
-
-	/* USER CODE BEGIN RTOS_SEMAPHORES */
-	/* add semaphores, ... */
-	/* USER CODE END RTOS_SEMAPHORES */
-
-	/* USER CODE BEGIN RTOS_TIMERS */
-	/* start timers, add new ones, ... */
-	/* USER CODE END RTOS_TIMERS */
-
-	/* Create the thread(s) */
-	/* definition and creation of defaultTask */
-	osThreadDef(defaultTask, StartDefaultTask, osPriorityIdle, 0, 128);
-	defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
-
-	/* definition and creation of tskLASFRONTLEFT */
-	osThreadDef(tskLASFRONTLEFT, tskLASFRONTLEFT_fnc, osPriorityNormal, 0, 256);
-	tskLASFRONTLEFTHandle = osThreadCreate(osThread(tskLASFRONTLEFT), NULL);
-
-	/* definition and creation of tskLASREARLEFT */
-	osThreadDef(tskLASREARLEFT, tskLASREARLEFT_fnc, osPriorityNormal, 0, 256);
-	tskLASREARLEFTHandle = osThreadCreate(osThread(tskLASREARLEFT), NULL);
-
-	/* definition and creation of tskLASFRONTRIGH */
-	osThreadDef(tskLASFRONTRIGH, tskLASFRONTRIGHT_fnc, osPriorityNormal, 0, 256);
-	tskLASFRONTRIGHHandle = osThreadCreate(osThread(tskLASFRONTRIGH), NULL);
-
-	/* definition and creation of tskLASREARRIGHT */
-	osThreadDef(tskLASREARRIGHT, tskLASREARRIGHT_fnc, osPriorityNormal, 0, 256);
-	tskLASREARRIGHTHandle = osThreadCreate(osThread(tskLASREARRIGHT), NULL);
-
-	/* definition and creation of tskLASLEFTFRONT */
-	osThreadDef(tskLASLEFTFRONT, tskLASLEFTFRONT_fnc, osPriorityNormal, 0, 256);
-	tskLASLEFTFRONTHandle = osThreadCreate(osThread(tskLASLEFTFRONT), NULL);
-
-	/* definition and creation of tskLASLEFTREAR */
-	osThreadDef(tskLASLEFTREAR, tskLASLEFTREAR_fnc, osPriorityNormal, 0, 256);
-	tskLASLEFTREARHandle = osThreadCreate(osThread(tskLASLEFTREAR), NULL);
-
-	/* definition and creation of tskLASRIGHTFRON */
-	osThreadDef(tskLASRIGHTFRON, tskLASRIGHTFRONT_fnc, osPriorityNormal, 0, 256);
-	tskLASRIGHTFRONHandle = osThreadCreate(osThread(tskLASRIGHTFRON), NULL);
-
-	/* definition and creation of tskLASRIGHTREAR */
-	osThreadDef(tskLASRIGHTREAR, tskLASRIGHTREAR_fnc, osPriorityNormal, 0, 256);
-	tskLASRIGHTREARHandle = osThreadCreate(osThread(tskLASRIGHTREAR), NULL);
-
-	/* definition and creation of tskEDGE */
-	osThreadDef(tskEDGE, tskEDGE_fnc, osPriorityAboveNormal, 0, 128);
-	tskEDGEHandle = osThreadCreate(osThread(tskEDGE), NULL);
-
-	/* USER CODE BEGIN RTOS_THREADS */
-	/* add threads, ... */
-	/* USER CODE END RTOS_THREADS */
-
-	/* USER CODE BEGIN RTOS_QUEUES */
-	/* add queues, ... */
-
-	/* USER CODE END RTOS_QUEUES */
-
-
-	/* Start scheduler */
-	osKernelStart();
-
-	/* We should never get here as control is now taken by the scheduler */
-
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	while (1) {
+
+		//-----------------Lasers-----------------
+		//Front left
+		VL53L1_GetMeasurementDataReady(LASER_FRONT_LEFT_DEV,&measurementDataReady);
+		if(measurementDataReady == 0x01){
+			VL53L1_GetRangingMeasurementData(LASER_FRONT_LEFT_DEV,	&RangingDataFrontLeft);
+			VL53L1_ClearInterruptAndStartMeasurement(LASER_FRONT_LEFT_DEV);
+			measurementDataReady = 0x0;
+		}
+
+		//Front right
+		VL53L1_GetMeasurementDataReady(LASER_FRONT_RIGHT_DEV,&measurementDataReady);
+		if(measurementDataReady == 0x01){
+			VL53L1_GetRangingMeasurementData(LASER_FRONT_RIGHT_DEV,	&RangingDataFrontRight);
+			VL53L1_ClearInterruptAndStartMeasurement(LASER_FRONT_RIGHT_DEV);
+			measurementDataReady = 0x0;
+		}
+
+		//Rear left
+		VL53L1_GetMeasurementDataReady(LASER_REAR_LEFT_DEV,&measurementDataReady);
+		if(measurementDataReady == 0x01){
+			VL53L1_GetRangingMeasurementData(LASER_REAR_LEFT_DEV,	&RangingDataRearLeft);
+			VL53L1_ClearInterruptAndStartMeasurement(LASER_REAR_LEFT_DEV);
+			measurementDataReady = 0x0;
+		}
+
+		//Rear right
+		VL53L1_GetMeasurementDataReady(LASER_REAR_RIGHT_DEV,&measurementDataReady);
+		if(measurementDataReady == 0x01){
+			VL53L1_GetRangingMeasurementData(LASER_REAR_RIGHT_DEV,	&RangingDataRearRight);
+			VL53L1_ClearInterruptAndStartMeasurement(LASER_REAR_RIGHT_DEV);
+			measurementDataReady = 0x0;
+		}
+
+		//------------CALCULATIONS---------
+		//Front PID
+		hFrontPID->currentValue = RangingDataFrontLeft.RangeMilliMeter - RangingDataFrontRight.RangeMilliMeter;
+		PIDController(hFrontPID);
+		if(hFrontPID->outputValue>(ScaledMotorMagnitude+PID_DEADBAND) || hFrontPID->outputValue<(ScaledMotorMagnitude-PID_DEADBAND)){
+			ScaledMotorMagnitude = hFrontPID->outputValue;
+		}
+
+
+		//Rear PID
+
+//		ScaledMotorMagnitude = (RangingDataFrontLeft.RangeMilliMeter - RangingDataFrontRight.RangeMilliMeter) * SPEED_GAIN;
+		previous_state = STATE_SEEKING;
+
+
+		//-------------STATES--------------
+		if (state_edges != 0x0 && EDGES_ENABLED == 1){
+			robot_state = STATE_EDGE_RETREAT;
+		}
+		else{
+			robot_state = previous_state;
+		}
+
+		switch(robot_state){
+		case STATE_EDGE_RETREAT:
+
+			switch(state_edges){
+			case 0x1:
+				//0001 Edge left front only triggered, reverse left side 100%, forward right side 50%
+				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELNEG);
+				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin,TMC5160_VMAX, EDGE_RETREAT_MAX_SPEED);
+
+				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
+				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin,TMC5160_VMAX, EDGE_RETREAT_HALF_SPEED);
+				break;
+
+			case 0x2:
+				//0010 Edge left rear only triggered, forward left side 100%, reverse right side 50%
+				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
+				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin,TMC5160_VMAX, EDGE_RETREAT_MAX_SPEED);
+
+				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELNEG);
+				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin,TMC5160_VMAX, EDGE_RETREAT_HALF_SPEED);
+				break;
+
+			case 0x4:
+				//0100 Edge right front only triggered, reverse right side 100%, forward left side 50%
+				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
+				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin,TMC5160_VMAX, EDGE_RETREAT_HALF_SPEED);
+
+				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELNEG);
+				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin,TMC5160_VMAX, EDGE_RETREAT_MAX_SPEED);
+				break;
+
+			case 0x8:
+				//1000 Edge right rear only triggered, forward right side 100%, reverse left side 50%
+				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELNEG);
+				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin,TMC5160_VMAX, EDGE_RETREAT_HALF_SPEED);
+
+				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
+				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin,TMC5160_VMAX, EDGE_RETREAT_MAX_SPEED);
+				break;
+
+			case 0x3:
+				//0011 Both left edges triggered, forward left side 100%, right side reverse 25%
+				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
+				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin,TMC5160_VMAX, EDGE_RETREAT_MAX_SPEED);
+
+				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELNEG);
+				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin,TMC5160_VMAX, EDGE_RETREAT_QUARTER_SPEED);
+				break;
+
+			case 0xC:
+				//1100 Both right edges triggered, forward right 100%, left side reverse 25%
+				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELNEG);
+				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin,TMC5160_VMAX, EDGE_RETREAT_QUARTER_SPEED);
+
+				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
+				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin,TMC5160_VMAX, EDGE_RETREAT_MAX_SPEED);
+				break;
+
+			case 0x5:
+				//0101 Both front edges triggered, reverse both 100%
+				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELNEG);
+				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin,TMC5160_VMAX, EDGE_RETREAT_MAX_SPEED);
+
+				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELNEG);
+				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin,TMC5160_VMAX, EDGE_RETREAT_MAX_SPEED);
+				break;
+
+			case 0xA:
+				//1010 Both rear edges triggered, forward both 100%
+				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
+				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin,TMC5160_VMAX, EDGE_RETREAT_MAX_SPEED);
+
+				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
+				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin,TMC5160_VMAX, EDGE_RETREAT_MAX_SPEED);
+				break;
+			}
+			break;
+
+			case STATE_SEEKING:
+				//drive to center -> 	L +100% R -100%
+				if(ScaledMotorMagnitude>=0){
+					tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
+					tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELNEG);
+				}
+				else if(ScaledMotorMagnitude<0){
+					tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELNEG);
+					tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
+				}
+
+				if(abs(ScaledMotorMagnitude) < SEEK_MAX){
+					tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin,TMC5160_VMAX, abs(ScaledMotorMagnitude));
+					tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin,TMC5160_VMAX, abs(ScaledMotorMagnitude));
+				}
+				previous_state=STATE_SEEKING;
+				break;
+
+			case STATE_TRACKING:
+				previous_state=STATE_TRACKING;
+				break;
+
+			case STATE_ATTACKING:
+				previous_state=STATE_ATTACKING;
+				break;
+
+			case STATE_IDLE:
+				previous_state=STATE_IDLE;
+				break;
+
+			case STATE_5SECWAIT:
+				previous_state=STATE_5SECWAIT;
+				break;
+		}
+
+		if(DASHBOARD_CONNECTED){
+			sprintf(buffer,
+					"{'LFL':'%d','LFR':'%d','LRL':'%d','LRR':'%d', 'MOTOR':'%d'}\r\n",
+					RangingDataFrontLeft.RangeMilliMeter,
+					RangingDataFrontRight.RangeMilliMeter,
+					RangingDataRearLeft.RangeMilliMeter,
+					RangingDataRearRight.RangeMilliMeter,
+					ScaledMotorMagnitude);
+
+			HAL_UART_Transmit(&huart2, (uint8_t*) buffer, strlen(buffer), 500);
+		}
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
@@ -395,7 +472,7 @@ void SystemClock_Config(void)
 	HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
 	/* SysTick_IRQn interrupt configuration */
-	HAL_NVIC_SetPriority(SysTick_IRQn, 15, 0);
+	HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
 
 /* I2C1 init function */
@@ -480,13 +557,10 @@ static void MX_GPIO_Init(void)
 	__HAL_RCC_GPIOB_CLK_ENABLE();
 
 	/*Configure GPIO pin Output Level */
-	HAL_GPIO_WritePin(GPIOC, Stepper_Left_CSN_Pin|LASER_REAR_RIGHT_SHDN_Pin|LASER_REAR_LEFT_SHDN_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOC, Stepper_Left_CSN_Pin|LASER_REAR_RIGHT_SHDN_Pin|LASER_FRONT_LEFT_SHDN_Pin, GPIO_PIN_RESET);
 
 	/*Configure GPIO pin Output Level */
-	HAL_GPIO_WritePin(GPIOB, LASER_RIGHT_REAR_SHDN_Pin|LASER_RIGHT_FRONT_SHDN_Pin|LASER_LEFT_REAR_SHDN_Pin|LASER_LEFT_FRONT_SHDN_Pin, GPIO_PIN_RESET);
-
-	/*Configure GPIO pin Output Level */
-	HAL_GPIO_WritePin(GPIOA, Stepper_Right_CSN_Pin|LASER_FRONT_RIGHT_SHDN_Pin|LASER_FRONT_LEFT_SHDN_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOA, LASER_REAR_LEFT_SHDN_Pin|Stepper_Right_CSN_Pin|LASER_FRONT_RIGHT_SHDN_Pin, GPIO_PIN_RESET);
 
 	/*Configure GPIO pins : EDGE_RIGHT_REAR_INTERRUPT_Pin EDGE_RIGHT_FRONT_INTERRUPT_Pin EDGE_LEFT_REAR_INTERRUPT_Pin */
 	GPIO_InitStruct.Pin = EDGE_RIGHT_REAR_INTERRUPT_Pin|EDGE_RIGHT_FRONT_INTERRUPT_Pin|EDGE_LEFT_REAR_INTERRUPT_Pin;
@@ -501,43 +575,25 @@ static void MX_GPIO_Init(void)
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 	HAL_GPIO_Init(Stepper_Left_CSN_GPIO_Port, &GPIO_InitStruct);
 
+	/*Configure GPIO pins : LASER_REAR_LEFT_SHDN_Pin LASER_FRONT_RIGHT_SHDN_Pin */
+	GPIO_InitStruct.Pin = LASER_REAR_LEFT_SHDN_Pin|LASER_FRONT_RIGHT_SHDN_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_PULLUP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
 	/*Configure GPIO pin : EDGE_LEFT_FRONT_INTERRUPT_Pin */
 	GPIO_InitStruct.Pin = EDGE_LEFT_FRONT_INTERRUPT_Pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	HAL_GPIO_Init(EDGE_LEFT_FRONT_INTERRUPT_GPIO_Port, &GPIO_InitStruct);
 
-	/*Configure GPIO pins : LASER_RIGHT_REAR_INTERRUPT_Pin LASER_REAR_LEFT_INTERRUPT_Pin */
-	GPIO_InitStruct.Pin = LASER_RIGHT_REAR_INTERRUPT_Pin|LASER_REAR_LEFT_INTERRUPT_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-	GPIO_InitStruct.Pull = GPIO_PULLUP;
-	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-	/*Configure GPIO pins : LASER_RIGHT_REAR_SHDN_Pin LASER_RIGHT_FRONT_SHDN_Pin LASER_LEFT_REAR_SHDN_Pin LASER_LEFT_FRONT_SHDN_Pin */
-	GPIO_InitStruct.Pin = LASER_RIGHT_REAR_SHDN_Pin|LASER_RIGHT_FRONT_SHDN_Pin|LASER_LEFT_REAR_SHDN_Pin|LASER_LEFT_FRONT_SHDN_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull = GPIO_PULLUP;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-	/*Configure GPIO pins : LASER_RIGHT_FRONT_INTERRUPT_Pin LASER_LEFT_REAR_INTERRUPT_Pin LASER_LEFT_FRONT_INTERRUPT_Pin LASER_REAR_RIGHT_INTERRUPT_Pin */
-	GPIO_InitStruct.Pin = LASER_RIGHT_FRONT_INTERRUPT_Pin|LASER_LEFT_REAR_INTERRUPT_Pin|LASER_LEFT_FRONT_INTERRUPT_Pin|LASER_REAR_RIGHT_INTERRUPT_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-	GPIO_InitStruct.Pull = GPIO_PULLUP;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-	/*Configure GPIO pins : LASER_REAR_RIGHT_SHDN_Pin LASER_REAR_LEFT_SHDN_Pin */
-	GPIO_InitStruct.Pin = LASER_REAR_RIGHT_SHDN_Pin|LASER_REAR_LEFT_SHDN_Pin;
+	/*Configure GPIO pins : LASER_REAR_RIGHT_SHDN_Pin LASER_FRONT_LEFT_SHDN_Pin */
+	GPIO_InitStruct.Pin = LASER_REAR_RIGHT_SHDN_Pin|LASER_FRONT_LEFT_SHDN_Pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_PULLUP;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-	/*Configure GPIO pin : LASER_FRONT_RIGHT_INTERRUPT_Pin */
-	GPIO_InitStruct.Pin = LASER_FRONT_RIGHT_INTERRUPT_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-	GPIO_InitStruct.Pull = GPIO_PULLUP;
-	HAL_GPIO_Init(LASER_FRONT_RIGHT_INTERRUPT_GPIO_Port, &GPIO_InitStruct);
 
 	/*Configure GPIO pin : Stepper_Right_CSN_Pin */
 	GPIO_InitStruct.Pin = Stepper_Right_CSN_Pin;
@@ -546,30 +602,17 @@ static void MX_GPIO_Init(void)
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 	HAL_GPIO_Init(Stepper_Right_CSN_GPIO_Port, &GPIO_InitStruct);
 
-	/*Configure GPIO pins : LASER_FRONT_RIGHT_SHDN_Pin LASER_FRONT_LEFT_SHDN_Pin */
-	GPIO_InitStruct.Pin = LASER_FRONT_RIGHT_SHDN_Pin|LASER_FRONT_LEFT_SHDN_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull = GPIO_PULLUP;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-	/*Configure GPIO pin : LASER_FRONT_LEFT_INTERRUPT_Pin */
-	GPIO_InitStruct.Pin = LASER_FRONT_LEFT_INTERRUPT_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-	GPIO_InitStruct.Pull = GPIO_PULLUP;
-	HAL_GPIO_Init(LASER_FRONT_LEFT_INTERRUPT_GPIO_Port, &GPIO_InitStruct);
-
 	/* EXTI interrupt init*/
-	HAL_NVIC_SetPriority(EXTI0_IRQn, 5, 0);
+	HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
-	HAL_NVIC_SetPriority(EXTI2_IRQn, 5, 0);
+	HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
-	HAL_NVIC_SetPriority(EXTI3_IRQn, 5, 0);
+	HAL_NVIC_SetPriority(EXTI3_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(EXTI3_IRQn);
 
-	HAL_NVIC_SetPriority(EXTI4_IRQn, 5, 0);
+	HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(EXTI4_IRQn);
 
 }
@@ -580,324 +623,6 @@ static void MX_GPIO_Init(void)
 
 
 /* USER CODE END 4 */
-
-/* StartDefaultTask function */
-void StartDefaultTask(void const * argument)
-{
-
-	/* USER CODE BEGIN 5 */
-
-	static char buffer[256];
-	/* Infinite loop */
-	for(;;)
-	{
-		//Bit 0:Edge left front Bit 1:Edge left rear Bit 2:Edge right front Bit 3: Edge right rear
-
-		if(state_edges != 0x0){
-			if(state_edges==0x1){
-				//0001 Edge left front only triggered, reverse left side 100%, forward right side 50%
-				xSemaphoreTake(SPIMutexHandle,100);
-				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELNEG);
-				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin,TMC5160_VMAX, 0x0060000);
-
-				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
-				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin,TMC5160_VMAX, 0x0030000);
-				xSemaphoreGive(SPIMutexHandle);
-			}
-			else if(state_edges==0x2){
-				//0010 Edge left rear only triggered, forward left side 100%, reverse right side 50%
-				xSemaphoreTake(SPIMutexHandle,100);
-				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
-				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin,TMC5160_VMAX, 0x0060000);
-
-				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELNEG);
-				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin,TMC5160_VMAX, 0x0030000);
-				xSemaphoreGive(SPIMutexHandle);
-			}
-			else if(state_edges==0x4){
-				//0100 Edge right front only triggered, reverse right side 100%, forward left side 50%
-				xSemaphoreTake(SPIMutexHandle,100);
-				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
-				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin,TMC5160_VMAX, 0x0030000);
-
-				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELNEG);
-				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin,TMC5160_VMAX, 0x0060000);
-				xSemaphoreGive(SPIMutexHandle);
-			}
-			else if(state_edges==0x8){
-				//1000 Edge right rear only triggered, forward right side 100%, reverse left side 50%
-				xSemaphoreTake(SPIMutexHandle,100);
-				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELNEG);
-				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin,TMC5160_VMAX, 0x0030000);
-
-				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
-				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin,TMC5160_VMAX, 0x0060000);
-				xSemaphoreGive(SPIMutexHandle);
-			}
-			else if(state_edges==0x3){
-				//0011 Both left edges triggered, forward left side 100%, right side reverse 25%
-				xSemaphoreTake(SPIMutexHandle,100);
-				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
-				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin,TMC5160_VMAX, 0x0060000);
-
-				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELNEG);
-				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin,TMC5160_VMAX, 0x0018000);
-				xSemaphoreGive(SPIMutexHandle);
-			}
-			else if(state_edges==0xC){
-				//1100 Both right edges triggered, forward right 100%, left side reverse 25%
-				xSemaphoreTake(SPIMutexHandle,100);
-				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELNEG);
-				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin,TMC5160_VMAX, 0x0018000);
-
-				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
-				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin,TMC5160_VMAX, 0x0060000);
-				xSemaphoreGive(SPIMutexHandle);
-			}
-			else if(state_edges==0x5){
-				//0101 Both front edges triggered, reverse both 100%
-				xSemaphoreTake(SPIMutexHandle,100);
-				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELNEG);
-				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin,TMC5160_VMAX, 0x0060000);
-
-				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELNEG);
-				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin,TMC5160_VMAX, 0x0060000);
-				xSemaphoreGive(SPIMutexHandle);
-			}
-			else if(state_edges==0xA){
-				//1010 Both rear edges triggered, forward both 100%
-				xSemaphoreTake(SPIMutexHandle,100);
-				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
-				tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin,TMC5160_VMAX, 0x0060000);
-
-				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
-				tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin,TMC5160_VMAX, 0x0060000);
-				xSemaphoreGive(SPIMutexHandle);
-			}
-			else{
-				//Either the robot has imploded or physics is officially broken...
-			}
-		}
-
-		else if(state_start_fight){
-			//drive to center -> 	L +100% R -100%
-			xSemaphoreTake(SPIMutexHandle,100);
-			tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
-			tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin,TMC5160_VMAX, 0x0000000);
-			tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
-			tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin,TMC5160_VMAX, 0x0000000);
-			xSemaphoreGive(SPIMutexHandle);
-			//once distance is equivalent to center, switch to tracking mode
-			state_start_fight=0;
-			state_edges=0x0;
-		}
-
-		else if(state_tracking){
-			//side sensors -> turn towards tracking sensor, keep turning until front sensors detect.
-			//front sensors -> 		L +100%	R +100%
-			//rear sensors ->		L -100% R -100%
-
-		}
-
-		else if(state_seeking){
-			//slowly spin -> 		L-25%	R +25%
-
-		}
-
-		else{
-			//should not reach this state, reset all other states except start fight
-			xSemaphoreTake(SPIMutexHandle,100);
-			tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
-			tmc5160_writeInt(Stepper_Left_CSN_GPIO_Port, Stepper_Left_CSN_Pin,TMC5160_VMAX, 0x0000000);
-			tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin, TMC5160_RAMPMODE, TMC5160_MODE_VELPOS);
-			tmc5160_writeInt(Stepper_Right_CSN_GPIO_Port, Stepper_Right_CSN_Pin,TMC5160_VMAX, 0x0000000);
-			xSemaphoreGive(SPIMutexHandle);
-		}
-
-
-		//transmit the status to the dashboard
-		if(DASHBOARD_CONNECTED){
-			sprintf(buffer,
-					"{'LFL':'%d','LFR':'%d','LRL':'%d','LRR':'%d','LLF':'%d','LLR':'%d','LRF':'%d','LRRI':'%d', 'EDG':'%i', LSM':'%d','RSM':'%d'}\r\n",
-					RangingDataFrontLeft.RangeMilliMeter,
-					RangingDataFrontRight.RangeMilliMeter,
-					RangingDataRearLeft.RangeMilliMeter,
-					RangingDataRearRight.RangeMilliMeter,
-					RangingDataLeftFront.RangeMilliMeter,
-					RangingDataLeftRear.RangeMilliMeter,
-					RangingDataRightFront.RangeMilliMeter,
-					RangingDataRightRear.RangeMilliMeter,
-					state_edges,
-					10,
-					10);
-
-			HAL_UART_Transmit(&huart2, (uint8_t*) buffer, strlen(buffer), 500);
-		}
-
-		osDelay(IDLE_LOOP_DELAY);
-	}
-	/* USER CODE END 5 */
-}
-
-/* tskLASFRONTLEFT_fnc function */
-void tskLASFRONTLEFT_fnc(void const * argument)
-{
-	/* USER CODE BEGIN tskLASFRONTLEFT_fnc */
-	/* Infinite loop */
-	for(;;)
-	{
-		xSemaphoreTake(I2CMutexHandle,100);
-		VL53L1_GetMeasurementDataReady(LASER_FRONT_LEFT_DEV,&RangingDataFrontLeft.RangeStatus);
-		if(RangingDataFrontLeft.RangeStatus==1){
-			VL53L1_GetRangingMeasurementData(LASER_FRONT_LEFT_DEV,	&RangingDataFrontLeft);
-			VL53L1_ClearInterruptAndStartMeasurement(LASER_FRONT_LEFT_DEV);
-		}
-		xSemaphoreGive(I2CMutexHandle);
-		osDelay(LASER_DELAY);
-	}
-	/* USER CODE END tskLASFRONTLEFT_fnc */
-}
-
-/* tskLASREARLEFT_fnc function */
-void tskLASREARLEFT_fnc(void const * argument)
-{
-	/* USER CODE BEGIN tskLASREARLEFT_fnc */
-	/* Infinite loop */
-	for(;;)
-	{
-		xSemaphoreTake(I2CMutexHandle,100);
-		VL53L1_GetMeasurementDataReady(LASER_REAR_LEFT_DEV,&RangingDataRearLeft.RangeStatus);
-		if(RangingDataRearLeft.RangeStatus==1){
-			VL53L1_GetRangingMeasurementData(LASER_REAR_LEFT_DEV,	&RangingDataRearLeft);
-			VL53L1_ClearInterruptAndStartMeasurement(LASER_REAR_LEFT_DEV);
-		}
-		xSemaphoreGive(I2CMutexHandle);
-		osDelay(LASER_DELAY);
-	}
-	/* USER CODE END tskLASREARLEFT_fnc */
-}
-
-/* tskLASFRONTRIGHT_fnc function */
-void tskLASFRONTRIGHT_fnc(void const * argument)
-{
-	/* USER CODE BEGIN tskLASFRONTRIGHT_fnc */
-	/* Infinite loop */
-	for(;;)
-	{
-		xSemaphoreTake(I2CMutexHandle,100);
-		VL53L1_GetMeasurementDataReady(LASER_FRONT_RIGHT_DEV,&RangingDataFrontRight.RangeStatus);
-		if(RangingDataFrontRight.RangeStatus==1){
-			VL53L1_GetRangingMeasurementData(LASER_FRONT_RIGHT_DEV,&RangingDataFrontRight);
-			VL53L1_ClearInterruptAndStartMeasurement(LASER_FRONT_RIGHT_DEV);
-		}
-		xSemaphoreGive(I2CMutexHandle);
-		osDelay(LASER_DELAY);
-	}
-	/* USER CODE END tskLASFRONTRIGHT_fnc */
-}
-
-/* tskLASREARRIGHT_fnc function */
-void tskLASREARRIGHT_fnc(void const * argument)
-{
-	/* USER CODE BEGIN tskLASREARRIGHT_fnc */
-	/* Infinite loop */
-	for(;;)
-	{
-
-		osDelay(LASER_DELAY);
-	}
-	/* USER CODE END tskLASREARRIGHT_fnc */
-}
-
-/* tskLASLEFTFRONT_fnc function */
-void tskLASLEFTFRONT_fnc(void const * argument)
-{
-	/* USER CODE BEGIN tskLASLEFTFRONT_fnc */
-	/* Infinite loop */
-	for(;;)
-	{
-		osDelay(LASER_DELAY);
-	}
-	/* USER CODE END tskLASLEFTFRONT_fnc */
-}
-
-/* tskLASLEFTREAR_fnc function */
-void tskLASLEFTREAR_fnc(void const * argument)
-{
-	/* USER CODE BEGIN tskLASLEFTREAR_fnc */
-	/* Infinite loop */
-	for(;;)
-	{
-		osDelay(LASER_DELAY);
-	}
-	/* USER CODE END tskLASLEFTREAR_fnc */
-}
-
-/* tskLASRIGHTFRONT_fnc function */
-void tskLASRIGHTFRONT_fnc(void const * argument)
-{
-	/* USER CODE BEGIN tskLASRIGHTFRONT_fnc */
-	/* Infinite loop */
-	for(;;)
-	{
-		osDelay(LASER_DELAY);
-	}
-	/* USER CODE END tskLASRIGHTFRONT_fnc */
-}
-
-/* tskLASRIGHTREAR_fnc function */
-void tskLASRIGHTREAR_fnc(void const * argument)
-{
-	/* USER CODE BEGIN tskLASRIGHTREAR_fnc */
-	/* Infinite loop */
-	for(;;)
-	{
-		osDelay(LASER_DELAY);
-	}
-	/* USER CODE END tskLASRIGHTREAR_fnc */
-}
-
-/* tskEDGE_fnc function */
-void tskEDGE_fnc(void const * argument)
-{
-	/* USER CODE BEGIN tskEDGE_fnc */
-	/* Infinite loop */
-	for(;;)
-	{
-//		state_edges = 0x0;
-
-		if(HAL_GPIO_ReadPin(EDGE_LEFT_FRONT_INTERRUPT_GPIO_Port, EDGE_LEFT_FRONT_INTERRUPT_Pin)==1){
-			state_edges |= 0x1;
-		}
-		else if(HAL_GPIO_ReadPin(EDGE_LEFT_FRONT_INTERRUPT_GPIO_Port, EDGE_LEFT_FRONT_INTERRUPT_Pin)==0){
-			state_edges &= ~0x1;
-		}
-
-		if(HAL_GPIO_ReadPin(EDGE_LEFT_REAR_INTERRUPT_GPIO_Port, EDGE_LEFT_REAR_INTERRUPT_Pin)==1){
-			state_edges |= 0x2;
-		}
-		else if(HAL_GPIO_ReadPin(EDGE_LEFT_REAR_INTERRUPT_GPIO_Port, EDGE_LEFT_REAR_INTERRUPT_Pin)==0){
-			state_edges &= ~0x2;
-		}
-
-		if(HAL_GPIO_ReadPin(EDGE_RIGHT_FRONT_INTERRUPT_GPIO_Port, EDGE_RIGHT_FRONT_INTERRUPT_Pin)==1){
-			state_edges |= 0x4;
-		}
-		else if(HAL_GPIO_ReadPin(EDGE_RIGHT_FRONT_INTERRUPT_GPIO_Port, EDGE_RIGHT_FRONT_INTERRUPT_Pin)==0){
-			state_edges &= ~0x4;
-		}
-
-		if(HAL_GPIO_ReadPin(EDGE_RIGHT_REAR_INTERRUPT_GPIO_Port, EDGE_RIGHT_REAR_INTERRUPT_Pin)==1){
-			state_edges |= 0x8;
-		}
-		else if(HAL_GPIO_ReadPin(EDGE_RIGHT_REAR_INTERRUPT_GPIO_Port, EDGE_RIGHT_REAR_INTERRUPT_Pin)==0){
-			state_edges &= ~0x8;
-		}
-
-		vTaskSuspend(NULL);
-	}
-	/* USER CODE END tskEDGE_fnc */
-}
 
 /**
  * @brief  Period elapsed callback in non blocking mode

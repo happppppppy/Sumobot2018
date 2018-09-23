@@ -1,6 +1,9 @@
 sumobot_functions.c:3:6:PIDController	32	static
 sumobot_functions.c:30:6:EncoderController	16	static
 sumobot_functions.c:38:6:tmc5160_writeInt	24	static
-sumobot_functions.c:43:6:tmc40bit_writeInt	32	static
-sumobot_functions.c:58:6:tmc5160_initialise_motor	8	static
-sumobot_functions.c:98:14:SetupVL53L1XDevices	32	static
+sumobot_functions.c:46:6:tmc40bit_writeInt	32	static
+sumobot_functions.c:61:6:tmc5160_initialise_motor	8	static
+sumobot_functions.c:106:7:degreesToRadians	32	static
+sumobot_functions.c:114:7:radiansToDegrees	32	static
+sumobot_functions.c:122:14:SetupVL53L1XDevices	32	static
+sumobot_functions.c:157:6:updateEdgeState	8	static
