@@ -49,6 +49,9 @@
 
 /* Private define ------------------------------------------------------------*/
 
+#define USER_BUTTON_Pin GPIO_PIN_13
+#define USER_BUTTON_GPIO_Port GPIOC
+#define USER_BUTTON_EXTI_IRQn EXTI15_10_IRQn
 #define EDGE_RIGHT_REAR_INTERRUPT_Pin GPIO_PIN_0
 #define EDGE_RIGHT_REAR_INTERRUPT_GPIO_Port GPIOC
 #define EDGE_RIGHT_REAR_INTERRUPT_EXTI_IRQn EXTI0_IRQn

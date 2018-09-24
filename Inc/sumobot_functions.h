@@ -145,12 +145,17 @@ void updateEdgeState();
 #define EDGE_RETREAT_HALF_SPEED 125000//0x001E848
 #define EDGE_RETREAT_QUARTER_SPEED 62500//0x000F424
 
-#define SEEK_MAX 100000
-#define SEEK_MIN 00000
+#define SEEK_SPEED 40000
+#define ATTACK_SPEED 100000
 
 #define SPEED_GAIN 40
 
 #define PID_DEADBAND 500
+
+#define DIR_LEFT 1
+#define DIR_RIGHT 2
+#define DIR_FORWARD 3
+#define DIR_REVERSE 4
 
 //states
 #define STATE_IDLE 0x0
@@ -161,12 +166,12 @@ void updateEdgeState();
 #define STATE_EDGE_RETREAT 0x5
 
 //Distance sensor constants
-#define MINIMUM_SENSE_DISTANCE 1300.0
+#define MINIMUM_SENSE_DISTANCE 500
 
 
 //debug defines
 #define DASHBOARD_CONNECTED 1
 #define MOTORS_ENABLED 1
-#define EDGES_ENABLED 0
+#define EDGES_ENABLED 1
 
 #endif /* SUMOBOT_FUNCTIONS_H_ */

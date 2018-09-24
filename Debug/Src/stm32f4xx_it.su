@@ -1,6 +1,7 @@
-stm32f4xx_it.c:53:6:SysTick_Handler	8	static
-stm32f4xx_it.c:74:6:EXTI0_IRQHandler	8	static
-stm32f4xx_it.c:88:6:EXTI2_IRQHandler	8	static
-stm32f4xx_it.c:102:6:EXTI3_IRQHandler	8	static
-stm32f4xx_it.c:116:6:EXTI4_IRQHandler	8	static
-stm32f4xx_it.c:130:6:TIM4_IRQHandler	8	static
+stm32f4xx_it.c:55:6:SysTick_Handler	8	static
+stm32f4xx_it.c:76:6:EXTI0_IRQHandler	8	static
+stm32f4xx_it.c:90:6:EXTI2_IRQHandler	8	static
+stm32f4xx_it.c:104:6:EXTI3_IRQHandler	8	static
+stm32f4xx_it.c:118:6:EXTI4_IRQHandler	8	static
+stm32f4xx_it.c:132:6:TIM4_IRQHandler	8	static
+stm32f4xx_it.c:146:6:EXTI15_10_IRQHandler	8	static
